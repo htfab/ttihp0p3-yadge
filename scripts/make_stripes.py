@@ -2,6 +2,7 @@
 # Copyright (C) 2025 Uri Shaked
 
 import os
+import math
 
 import gdstk
 
@@ -17,25 +18,44 @@ top_cell = lib.top_level()[0]
 gds_height = top_cell.bounding_box()[1][1]
 stripe_height = gds_height
 panel_gap = 2.0  # µm
+theta = 53  # degrees
 
 
-def add_stripe_panel(cell, stripe_w, pitch, panel_width):
-    x = 0.0
-    while x + stripe_w <= panel_width:
-        cell.add(rect)
-        x += pitch
+def calculate_pitch(m: int, wavelength_nm: float, theta_deg: float) -> float:
+    """
+    Calculates the slit pitch 'd' using the diffraction grating equation:
+        d * sin(theta) = m * lambda
+
+    Parameters:
+    - m: Order of the diffraction (integer)
+    - wavelength: Wavelength of light in nanometers (float)
+    - theta_deg: Diffraction angle in degrees (float)
+
+    Returns:
+    - d: Slit spacing in um (float)
+    """
+    wavelength_m = wavelength_nm * 1e-9
+    return (m * wavelength_m / math.sin(math.radians(theta_deg))) * 1e6
 
 
-# Panel parameters: (name, pitch, stripe_w, gap, panel_width)
+def align_to_grid(value: float):
+    """
+    Aligns the given point x/y value to a 5 nm grid
+    """
+    return round(value * 200) / 200
+
+
+# Panel parameters: (name, wavelength_nm, diffraction order, stripe_w, gap, panel_width)
 panels = [
-    ("G", 4.60, 2.00, 50),  # Green
-    ("R", 5.00, 2.00, 50),  # Red
-    ("Y", 4.35, 2.00, 50),  # Yellow
-    ("B", 4.00, 2.00, 50),  # Blue
+    ("G", 526, 7, 2.00, 50),  # Green
+    ("R", 667, 6, 2.00, 50),  # Red
+    ("Y", 580, 6, 2.00, 50),  # Yellow
+    ("B", 457, 7, 2.00, 50),  # Blue
 ]
 
 x = 0.0
-for name, pitch, stripe_w, panel_width in panels:
+for name, wavelength_nm, m, stripe_w, panel_width in panels:
+    pitch = align_to_grid(calculate_pitch(m, wavelength_nm, theta))
     subcell = gdstk.Cell(f"panel_{name}")
     rect = gdstk.rectangle(
         (0, 0),
@@ -51,6 +71,7 @@ for name, pitch, stripe_w, panel_width in panels:
             subcell, (x, 0.0), columns=columns, rows=1, spacing=(pitch, 0.0)
         )
     )
+    print(f"Panel: {name}, λ={wavelength_nm}, m={m}, pitch={pitch}")
     x += panel_width + panel_gap
 
 # No fill for the whole cell
