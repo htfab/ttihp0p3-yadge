@@ -9,7 +9,7 @@ You can also include images in this folder and reference them in the markdown. E
 
 ## How it works
 
-Should hopefully generate colorful stripes when viewed under the microscope.
+Should hopefully generate a colorful pattern when viewed under the microscope.
 
 ## How to test
 
