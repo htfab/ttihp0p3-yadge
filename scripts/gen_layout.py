@@ -31,19 +31,18 @@ colors = {
     'G': 510,  # green
     'Y': 570,  # yellow
     'R': 650,  # red
-    'I': 760,  # infra-red / invisible
+    'I': 760,  # invisible
 }
 
 alt_stripes_h = [(0, 7), (28, 47), (68, 87), (108, 127), (148, gds_height)]
-alt_stripes_hx = [(1.26, 9), (28.795, 49), (68.795, 89), (108.795, 129), (149.26, gds_height+2)]
-alt_stripes_v = [(3.295, 11.06), (44.75, 60.2), (93.855, 108.5), (145.14, 160), (193.805, gds_width)]
+alt_stripes_v = [(0, 9.06), (44.24, 56.2), (92.15, 106.5), (143.22, 158), (192, gds_width)]
 
 patterns = [
     ('R', [((0, 129), (gds_width+2, 146), 'V')] + [((11.06, y1), (45, y2), 'V') for y1, y2 in alt_stripes_h]),
     ('Y', [((0, 89), (gds_width+2, 106), 'V')] + [((58.2, y1), (93, y2), 'V') for y1, y2 in alt_stripes_h]),
     ('G', [((0, 49), (gds_width+2, 66), 'V')] + [((108.5, y1), (144, y2), 'V') for y1, y2 in alt_stripes_h]),
     ('B', [((0, 9), (gds_width+2, 26), 'V')] + [((160, y1), (193, y2), 'V') for y1, y2 in alt_stripes_h]),
-    ('I', [((x1, y1), (x2, y2), 'D') for y1, y2 in alt_stripes_hx for x1, x2 in alt_stripes_v]),
+    ('I', [((x1, y1), (x2, y2), 'F') for y1, y2 in alt_stripes_h for x1, x2 in alt_stripes_v]),
 ]
 
 min_pitch = 4.0
@@ -57,14 +56,14 @@ for name, areas in patterns:
         subcell = gdstk.Cell(f"pattern_{name}{i}")
         rect = gdstk.rectangle(
             (0, 0),
-            (x2-x1 if d == 'H' else stripe_width, y2-y1 if d == 'V' else stripe_width),
+            (x2-x1 if d in 'HF' else stripe_width, y2-y1 if d in 'VF' else stripe_width),
             layer=topmetal2_layer,
             datatype=topmetal2_datatype,
         )
         subcell.add(rect)
         lib.add(subcell)
-        columns = 1 if d == 'H' else int((x2-x1) / pitch)
-        rows = 1 if d == 'V' else int((y2-y1) / pitch)
+        columns = 1 if d in 'HF' else int((x2-x1) / pitch)
+        rows = 1 if d in 'VF' else int((y2-y1) / pitch)
         top_cell.add(
             gdstk.Reference(
                 subcell, (x1, y1), columns=columns, rows=rows, spacing=(pitch, pitch)
